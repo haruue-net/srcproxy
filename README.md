@@ -5,7 +5,7 @@ srcproxy is a TCP only proxy protocol designed to preserve the source address
 of the client side. The proxy client of srcproxy sends source address
 information to the proxy server, and the proxy server will establish TCP
 connection to the proxy target with the original source address
-(with `sysctl net.ipv*.ip_nonlocal_bind=1`). 
+(with `sysctl net.ipv{4,6}.ip_nonlocal_bind=1`). 
 
 ![](./docs/srcproxy.drawio.png)
 
@@ -32,11 +32,11 @@ prefix.
 ```json5
 {
   "listen": "192.0.2.1:21829", // The listen address for connection from clients, it is recommanded to use a specified address instead of 0.0.0.0
-  "acl": [  // The ACL policy to restrict the source addresses can be used by different clients.
+  "acl": [  // (Optional) The ACL policy to restrict the source addresses can be used by different clients.
     // An empty "acl" array would completely disable the ACL feature.
     {
       "auth": "613200f2-0af9-40e3-9dc2-a5d6f365db1b",  // The "auth" field in the client config, used to distinguish each client.
-      "allowed_src_ips": [  // Prefixes that this client can use as source address.
+      "allowed_src_ips": [  // (Optional) Prefixes that this client can use as source address.
         "192.0.2.128/25",
         "2001:db8:aaaa::/64"
       ],
@@ -48,8 +48,8 @@ prefix.
       ],
     },
   ],
-  "timeout": "5m", // Connect & idle timeout of each TCP connection, accept strings like "5m", "300s", and integer number (for seconds) as other proxy application.
-  "log_level": "info", // Log level, supports "info" and "error"
+  "timeout": "5m", // (Optional) Connect & idle timeout of each TCP connection, accept strings like "5m", "300s", and integer number (for seconds) as other proxy application.
+  "log_level": "info", // (Optional) Log level, supports "info" and "error"
 }
 ```
 
@@ -77,17 +77,17 @@ a standalone netns for a easier configration.
 ```json5
 {
   "inbound": {
-    "mode": "redirect", // Only supports iptables -j REDIRECT now.
+    "mode": "redirect", // (Optional) Only supports iptables -j REDIRECT now.
     "listen": ":9001"  // The listen address for REDIRECT --to-port, only specify the port part so it would listen for both IPv4 and IPv6.
   },
   "outbound": {
     "server": "192.0.2.1:21829",  // The address of the srcproxy server.
-    "auth": "613200f2-0af9-40e3-9dc2-a5d6f365db1b", // The auth credential for server side ACL policy.
-    "local_addr": "192.0.2.2%eth0", // Bind to specified source address / interface when connect to the server.
-    "fwmark": 0x1234,  // Set specified fwmark for connection to the server.
+    "auth": "613200f2-0af9-40e3-9dc2-a5d6f365db1b", // (Optional) The auth credential for server side ACL policy.
+    "local_addr": "192.0.2.2%eth0", // (Optional) Bind to specified source address / interface when connect to the server.
+    "fwmark": 0x1234,  // (Optional) Set specified fwmark for connection to the server.
   },
-  "timeout": "5m", // Connect & idle timeout of each TCP connection, accept strings like "5m", "300s", and integer number (for seconds) as other proxy application.
-  "log_level": "info", // Log level, supports "info" and "error"
+  "timeout": "5m", // (Optional) Connect & idle timeout of each TCP connection, accept strings like "5m", "300s", and integer number (for seconds) as other proxy application.
+  "log_level": "info", // (Optional) Log level, supports "info" and "error"
 }
 ```
 
