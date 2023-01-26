@@ -65,7 +65,7 @@ ip -6 route add local 2001:db8:aaaa::/64 dev lo table local
 Please be aware that `ip_nonlocal_bind` is a global options for all application
 in this netns, and add a `dev lo table local` route would make the prefix only
 to be routed to local process. It is recommanded to run the srcproxy sevver in
-a standalone netns for a easier configation.
+a standalone netns for a easier configration.
 
 
 ### Client
