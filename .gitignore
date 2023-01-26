@@ -1,0 +1,7 @@
+/.idea
+*.exe
+/srcproxy
+/srcproxy.test
+/profile*.out
+/server.json
+/client.json
