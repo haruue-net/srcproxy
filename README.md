@@ -1,24 +1,25 @@
 srcproxy
 =================
 
-srcproxy is a TCP only proxy protocol designed to preserve the source address
-of the client side. The proxy client of srcproxy sends source address
-information to the proxy server, and the proxy server will establish TCP
-connection to the proxy target with the original source address
-(with `sysctl net.ipv{4,6}.ip_nonlocal_bind=1`). 
+srcproxy is a TCP-only proxy protocol aimed at preserving the source address of
+the client side. 
+The proxy client of srcproxy sends source address information to the proxy
+server, and the proxy server establishes a TCP connection to the proxy
+destination using the original source address 
+(with `sysctl net.ipv{4,6}.ip_nonlocal_bind=1`).
 
 ![](./docs/srcproxy.drawio.png)
 
-Comparing to other Layer 4 proxy, srcproxy allows you preserve the address of
-client side. For instance, providing proxy service to multiple clients and
-allow them has their own source prefixes.
+Compared to other Layer 4 proxies, srcproxy allows you to preserve the
+client-side address. For example, you can provide proxy service to multiple
+users and allow them to have their own source address space.
 
-Comparing to Layer 3 VPN, srcproxy let you utilize customized tools to optimize
-the TCP stack.
+Compared to Layer 3 VPN, srcproxy allows you to use customised tools to
+optimise the TCP stack.
 
-srcproxy only supports Linux now, as it requires iptables REDIRECT target for
-inbound and `net.ipv*.ip_nonlocal_bind` to bind any address in a specified
-prefix.
+srcproxy now only supports Linux, as it requires iptables REDIRECT target for
+inbound and `net.ipv{4,6}.ip_nonlocal_bind` to `bind(2)` any address in the
+specified prefix.
 
 
 ## Configuration
@@ -31,30 +32,30 @@ prefix.
 
 ```json5
 {
-  "listen": "192.0.2.1:21829", // The listen address for connection from clients, it is recommanded to use a specified address instead of 0.0.0.0
-  "acl": [  // (Optional) The ACL policy to restrict the source addresses can be used by different clients.
+  "listen": "192.0.2.1:21829", // The listen address for connection from clients, it is recommended to use a specific address instead of 0.0.0.0
+  "acl": [  // (Optional) The ACL policy for restricting source addresses can be used by different clients.
     // An empty "acl" array would completely disable the ACL feature.
     {
-      "auth": "613200f2-0af9-40e3-9dc2-a5d6f365db1b",  // The "auth" field in the client config, used to distinguish each client.
-      "allowed_src_ips": [  // (Optional) Prefixes that this client can use as source address.
+      "auth": "613200f2-0af9-40e3-9dc2-a5d6f365db1b",  // The "auth" field in the client-side configuration, used to distinguish each client.
+      "allowed_src_ips": [  // (Optional) Prefixes that this client can use as source addresses.
         "192.0.2.128/25",
         "2001:db8:aaaa::/64"
       ],
     },
     {
-      "auth": "", // An empty "auth" is acceptable, and it only matches empty "auth" field in client config.
+      "auth": "", // A blank "auth" is acceptable and will only match a blank "auth" field in the client configuration.
       "allowed_src_ips": [
-        // An empty "allowed_src_ips" array is acceptable, and it allows this client use any address as source address.
+        // An empty "allowed_src_ips" array is acceptable, and it will allow this client to use any address as a source address.
       ],
     },
   ],
-  "timeout": "5m", // (Optional) Connect & idle timeout of each TCP connection, accept strings like "5m", "300s", and integer number (for seconds) as other proxy application.
-  "log_level": "info", // (Optional) Log level, supports "info" and "error"
+  "timeout": "5m", // (Optional) Connect & idle timeout of each TCP connection, accepting strings such as "5m", "300s" and integer number (for seconds) as any other proxy tools do.
+  "log_level": "info", // (Optional) Log level, accepting "info" and "error".
 }
 ```
 
-You need to enable `ip_nonlocal_bind` and add prefixes that uses as source
-addresses into route table manually.
+You will need to enable `ip_nonlocal_bind' and manually add prefixes used as
+source addresses to the route table.
 
 ```bash
 sysctl net.ipv4.ip_nonlocal_bind=1
@@ -62,10 +63,10 @@ sysctl net.ipv6.ip_nonlocal_bind=1
 ip -6 route add local 2001:db8:aaaa::/64 dev lo table local
 ```
 
-Please be aware that `ip_nonlocal_bind` is a global options for all application
-in this netns, and add a `dev lo table local` route would make the prefix only
-to be routed to local process. It is recommanded to run the srcproxy sevver in
-a standalone netns for a easier configration.
+Note that `ip_nonlocal_bind` is a global option for all processes in this
+netns, and adding a `dev lo table local` route would make the prefix to be
+routed to the local process only. It is recommended to run the srcproxy server
+in a standalone netns for easier set-up.
 
 
 ### Client
@@ -78,34 +79,34 @@ a standalone netns for a easier configration.
 {
   "inbound": {
     "mode": "redirect", // (Optional) Only supports iptables -j REDIRECT now.
-    "listen": ":9001"  // The listen address for REDIRECT --to-port, only specify the port part so it would listen for both IPv4 and IPv6.
+    "listen": ":9001"  // The listen address for REDIRECT --to-port. Consider specifying just the port part, so it would listen for both IPv4 and IPv6.
   },
   "outbound": {
     "server": "192.0.2.1:21829",  // The address of the srcproxy server.
-    "auth": "613200f2-0af9-40e3-9dc2-a5d6f365db1b", // (Optional) The auth credential for server side ACL policy.
-    "local_addr": "192.0.2.2%eth0", // (Optional) Bind to specified source address / interface when connect to the server.
-    "fwmark": 0x1234,  // (Optional) Set specified fwmark for connection to the server.
+    "auth": "613200f2-0af9-40e3-9dc2-a5d6f365db1b", // (Optional) The auth credential for the ACL policy on the server side.
+    "local_addr": "192.0.2.2%eth0", // (Optional) bind(2) to the specified source address/interface when connecting to the server.
+    "fwmark": 0x1234,  // (Optional) Set the specified fwmark when connecting to the server.
   },
-  "timeout": "5m", // (Optional) Connect & idle timeout of each TCP connection, accept strings like "5m", "300s", and integer number (for seconds) as other proxy application.
-  "log_level": "info", // (Optional) Log level, supports "info" and "error"
+  "timeout": "5m", // (Optional) Connect & idle timeout of each TCP connection, accepting strings such as "5m", "300s" and integer number (for seconds) as any other proxy tools do.
+  "log_level": "info", // (Optional) Log level, accepting "info" and "error".
 }
 ```
 
-You need manually add iptables rules to redirect TCP traffic to the srcproxy client.
+You will need to manually add iptables rules to redirect TCP traffic to the
+srcproxy client.
 
 ```bash
 ip6tables -t nat -A PREROUTING -s 2001:db8:aaaa::/64 -j REDIRECT --to-port 9001
 ```
 
-As srcproxy only supports TCP, you might need an Layer 3 VPN for other
-protocols such like UDP and ICMP.
+As srcproxy only supports TCP, you may need a Layer 3 VPN for other protocols
+such as UDP and ICMP.
 
 
 ## Security
 
-The security of srcproxy should be same as plain SOCKS5, as there is no
-data/key encrypt in this protocol.
+The security of srcproxy should be the same as plain SOCKS5, as there is no
+data/key encryption in this protocol.
 
-I personally recommand to forward the port of srcproxy server with the "relay"
-feature of other secure proxy tools (such like SSH and Hysteria).
-
+I personally recommend forwarding the port of the srcproxy server with the
+"relay" feature of other secure proxy tools (such as SSH and Hysteria).
