@@ -56,12 +56,14 @@ You will need to manually add prefixes used as source addresses to the route
 table.
 
 ```bash
-ip -6 route add local 2001:db8:aaaa::/64 dev lo table local
+ip -6 route add local 2001:db8:aaaa::/64 dev lo table 30
+ip -6 rule add to 2001:db8:aaaa::/64 ipproto tcp lookup 30 pref 30000
 ```
 
-Note that adding a `dev lo table local` route would make the prefix to be
-routed to the local process only. It is recommended to run the srcproxy server
-in a standalone netns for easier set-up.
+Note that adding the above route would cause all TCP traffic sent to
+2001:db8:aaaa::/64 to be routed to local addresses only. This would also
+prevent any incoming TCP connections to 2001:db8:aaaa::/64 from being
+established.
 
 
 ### Client
