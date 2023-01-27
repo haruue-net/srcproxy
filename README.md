@@ -52,18 +52,16 @@ inbound and `ip(7):IP_FREEBIND` to `bind(2)` any address in the specified prefix
 }
 ```
 
-You will need to manually add prefixes used as source addresses to the route
-table.
+On the server side, we can use the CONNMARK to send back only the response
+packet of the outgoing TCP connection established by srcproxy, without
+affecting the incoming TCP connections.
 
 ```bash
+ip6tables -t nat -A OUTPUT -s 2001:db8:aaaa::/64 -p tcp -j CONNMARK --set-mark 0x5
+ip6tables -t mangle -A PREROUTING -m connmark --mark 0x5 -j MARK --set-mark 0x5
 ip -6 route add local 2001:db8:aaaa::/64 dev lo table 30
-ip -6 rule add to 2001:db8:aaaa::/64 ipproto tcp lookup 30 pref 30000
+ip -6 rule add fwmark 0x5 lookup 20 pref 30000
 ```
-
-Note that adding the above route would cause all TCP traffic sent to
-2001:db8:aaaa::/64 to be routed to local processes only. This would also
-prevent any incoming TCP connections to 2001:db8:aaaa::/64 from being
-established.
 
 
 ### Client
