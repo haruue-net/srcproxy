@@ -61,7 +61,7 @@ ip -6 rule add to 2001:db8:aaaa::/64 ipproto tcp lookup 30 pref 30000
 ```
 
 Note that adding the above route would cause all TCP traffic sent to
-2001:db8:aaaa::/64 to be routed to local addresses only. This would also
+2001:db8:aaaa::/64 to be routed to local processes only. This would also
 prevent any incoming TCP connections to 2001:db8:aaaa::/64 from being
 established.
 
