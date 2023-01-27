@@ -10,6 +10,7 @@ import (
 type LinuxSockopts struct {
 	BindIface    *net.Interface
 	FirewallMark *uint32
+	FreeBind     bool
 }
 
 func (o *LinuxSockopts) Control(network, address string, c syscall.RawConn) (err error) {
@@ -27,6 +28,12 @@ func (o *LinuxSockopts) bindRawConn(c syscall.RawConn) (err error) {
 		}
 		if o.FirewallMark != nil {
 			innerErr = unix.SetsockoptInt(int(fd), unix.SOL_SOCKET, unix.SO_MARK, int(*o.FirewallMark))
+			if innerErr != nil {
+				return
+			}
+		}
+		if o.FreeBind {
+			innerErr = unix.SetsockoptInt(int(fd), unix.SOL_IP, unix.IP_FREEBIND, 1)
 			if innerErr != nil {
 				return
 			}

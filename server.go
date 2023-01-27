@@ -18,6 +18,8 @@ type Server struct {
 
 type CheckAddrFunc = func(origAddr *net.TCPAddr, auth []byte) (modifiedAddr *net.TCPAddr, err error)
 
+var sockopts = utils.LinuxSockopts{FreeBind: true}
+
 type ServerLogger interface {
 	LogConn(reqAddr net.Addr, src, dst *net.TCPAddr)
 	LogError(reqAddr net.Addr, src, dst *net.TCPAddr, err error)
@@ -136,6 +138,7 @@ func (s *Server) handleRelayRequest(conn net.Conn, req *RelayRequest) {
 	dialer := &net.Dialer{
 		LocalAddr: src,
 		Timeout:   s.Timeout,
+		Control:   sockopts.Control,
 	}
 	if s.DialerCreatedFunc != nil {
 		s.DialerCreatedFunc(dialer)

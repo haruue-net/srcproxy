@@ -5,8 +5,7 @@ srcproxy is a TCP-only proxy protocol aimed at preserving the source address of
 the client side. 
 The proxy client of srcproxy sends source address information to the proxy
 server, and the proxy server establishes a TCP connection to the proxy
-destination using the original source address 
-(with `sysctl net.ipv{4,6}.ip_nonlocal_bind=1`).
+destination using the original source address (with `ip(7):IP_FREEBIND`).
 
 ![](./docs/srcproxy.drawio.png)
 
@@ -18,8 +17,7 @@ Compared to Layer 3 VPN, srcproxy allows you to use customised tools to
 optimise the TCP stack.
 
 srcproxy now only supports Linux, as it requires iptables REDIRECT target for
-inbound and `net.ipv{4,6}.ip_nonlocal_bind` to `bind(2)` any address in the
-specified prefix.
+inbound and `ip(7):IP_FREEBIND` to `bind(2)` any address in the specified prefix.
 
 
 ## Configuration
@@ -54,17 +52,14 @@ specified prefix.
 }
 ```
 
-You will need to enable `ip_nonlocal_bind' and manually add prefixes used as
-source addresses to the route table.
+You will need to manually add prefixes used as source addresses to the route
+table.
 
 ```bash
-sysctl net.ipv4.ip_nonlocal_bind=1
-sysctl net.ipv6.ip_nonlocal_bind=1
 ip -6 route add local 2001:db8:aaaa::/64 dev lo table local
 ```
 
-Note that `ip_nonlocal_bind` is a global option for all processes in this
-netns, and adding a `dev lo table local` route would make the prefix to be
+Note that adding a `dev lo table local` route would make the prefix to be
 routed to the local process only. It is recommended to run the srcproxy server
 in a standalone netns for easier set-up.
 
